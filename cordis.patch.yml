@@ -1,0 +1,192 @@
+# Aurabot: DSH bundle patch and plugin declarations.
+#
+# 1) aurabot: host entry (src/host.js) and web client (client/client.js).
+# 2) Agent presets used by Aurabot QQ sessions and delegated subagents:
+#    - aurabot-private: owner private chat with persona and full tools.
+#    - aurabot-private-long: private chat with jobs and scheduling when enabled.
+#    - aurabot-social: group or other private chat, with QQ tools but no local tools.
+#    - aurabot-subagent: local tools without the QQ persona for delegated tasks.
+#      The child executes its own task and does not inherit the QQ tool set.
+#    The {{aurabot_persona}} prompt variable applies persona changes immediately.
+- insert:
+    - id: bili-scroll
+      name: dsh-bili-scroll
+      config:
+        peakValley: false
+        autoComment: false
+    - id: aurabot
+      name: dsh-aurabot-qq
+    - id: preset-aurabot-private
+      name: '@deepseek-ai/dsh-agent-preset'
+      config:
+        id: aurabot-private
+        name: Aurabot · 主人私聊
+        description: 大肥鱼在 QQ 上和主人私聊时用：人格 + 完整工具
+        order: 60
+        plugins:
+          - id: persona
+            name: '@deepseek-ai/dsh-persona'
+            config:
+              prefix: "{{aurabot_persona}}\n\n{{aurabot_rules_private}}"
+              # The persona owns the system prompt, replacing the long default assistant prompt.
+              # Tools remain available through their definitions.
+              complete: true
+          - id: time-context
+            name: '@deepseek-ai/dsh-time-context'
+          - id: tool-bash
+            name: '@deepseek-ai/dsh-tool-bash'
+            disabled: !!js process.platform === 'win32'
+          - id: tool-pwsh
+            name: '@deepseek-ai/dsh-tool-pwsh'
+            disabled: !!js process.platform !== 'win32'
+          - id: tool-fs
+            name: '@deepseek-ai/dsh-tool-fs'
+          - id: tool-fs-search
+            name: '@deepseek-ai/dsh-tool-fs-search'
+            config:
+              sampleOverCapGlobResults: false
+          - id: compaction
+            name: cordis:group
+            group: true
+            isolate:
+              compaction: true
+              toolResultPruner: true
+            config:
+              - id: compaction-basic
+                name: '@deepseek-ai/dsh-compaction-basic'
+              - id: command-compact
+                name: '@deepseek-ai/dsh-command-compact'
+              - id: tool-result-pruner
+                name: '@deepseek-ai/dsh-compaction-tool-result-pruner'
+                config:
+                  thresholdChars: 8192
+                  headChars: 4096
+                  tailChars: 1024
+          - id: tool-web
+            name: '@deepseek-ai/dsh-tool-web'
+            config:
+              fetch: true
+              searchTimeoutMs: 60000
+    - id: preset-aurabot-private-long
+      name: '@deepseek-ai/dsh-agent-preset'
+      config:
+        id: aurabot-private-long
+        name: Aurabot · 主人私聊（长任务模式）
+        description: 主人私聊 + 后台任务（jobs）和定时任务（schedule）：长任务跑完会自动唤醒她回报
+        order: 62
+        plugins:
+          - id: persona
+            name: '@deepseek-ai/dsh-persona'
+            config:
+              prefix: "{{aurabot_persona}}\n\n{{aurabot_rules_private}}"
+              # The persona owns the system prompt, replacing the long default assistant prompt.
+              # Tools remain available through their definitions.
+              complete: true
+          - id: time-context
+            name: '@deepseek-ai/dsh-time-context'
+          - id: tool-bash
+            name: '@deepseek-ai/dsh-tool-bash'
+            disabled: !!js process.platform === 'win32'
+          - id: tool-pwsh
+            name: '@deepseek-ai/dsh-tool-pwsh'
+            disabled: !!js process.platform !== 'win32'
+          - id: tool-fs
+            name: '@deepseek-ai/dsh-tool-fs'
+          - id: tool-fs-search
+            name: '@deepseek-ai/dsh-tool-fs-search'
+            config:
+              sampleOverCapGlobResults: false
+          - id: compaction
+            name: cordis:group
+            group: true
+            isolate:
+              compaction: true
+              toolResultPruner: true
+            config:
+              - id: compaction-basic
+                name: '@deepseek-ai/dsh-compaction-basic'
+              - id: command-compact
+                name: '@deepseek-ai/dsh-command-compact'
+              - id: tool-result-pruner
+                name: '@deepseek-ai/dsh-compaction-tool-result-pruner'
+                config:
+                  thresholdChars: 8192
+                  headChars: 4096
+                  tailChars: 1024
+          - id: tool-web
+            name: '@deepseek-ai/dsh-tool-web'
+            config:
+              fetch: true
+              searchTimeoutMs: 60000
+          # Long-task mode supports background jobs and one-time or recurring schedules.
+          - id: tool-jobs
+            name: '@deepseek-ai/dsh-tool-jobs'
+          - id: tool-schedule
+            name: '@deepseek-ai/dsh-tool-schedule'
+    # Dedicated preset selected by hub.runSubagentTurn via request.agentPreset.
+    # Use the default assistant identity and local tools for self-contained tasks.
+    # Explicit selection prevents inheriting aurabot-social, which lacks shell access.
+    - id: preset-aurabot-subagent
+      name: '@deepseek-ai/dsh-agent-preset'
+      config:
+        id: aurabot-subagent
+        name: Aurabot · 子智能体
+        description: 插件内部委派任务的子智能体用：无 QQ 人格，带本机命令与文件工具，自己动手完成自足任务
+        order: 59
+        plugins:
+          - id: time-context
+            name: '@deepseek-ai/dsh-time-context'
+          - id: tool-bash
+            name: '@deepseek-ai/dsh-tool-bash'
+            disabled: !!js process.platform === 'win32'
+          - id: tool-pwsh
+            name: '@deepseek-ai/dsh-tool-pwsh'
+            disabled: !!js process.platform !== 'win32'
+          - id: tool-fs
+            name: '@deepseek-ai/dsh-tool-fs'
+          - id: tool-fs-search
+            name: '@deepseek-ai/dsh-tool-fs-search'
+            config:
+              sampleOverCapGlobResults: false
+          - id: compaction
+            name: cordis:group
+            group: true
+            isolate:
+              compaction: true
+              toolResultPruner: true
+            config:
+              - id: compaction-basic
+                name: '@deepseek-ai/dsh-compaction-basic'
+              - id: command-compact
+                name: '@deepseek-ai/dsh-command-compact'
+              - id: tool-result-pruner
+                name: '@deepseek-ai/dsh-compaction-tool-result-pruner'
+                config:
+                  thresholdChars: 8192
+                  headChars: 4096
+                  tailChars: 1024
+    - id: preset-aurabot-social
+      name: '@deepseek-ai/dsh-agent-preset'
+      config:
+        id: aurabot-social
+        name: Aurabot · 群聊
+        description: 大肥鱼在 QQ 群和陌生人私聊时用：人格 + 只有 QQ 社交工具，没有任何电脑操作能力
+        order: 61
+        plugins:
+          - id: persona
+            name: '@deepseek-ai/dsh-persona'
+            config:
+              prefix: "{{aurabot_persona}}\n\n{{aurabot_rules_social}}"
+              complete: true
+          - id: time-context
+            name: '@deepseek-ai/dsh-time-context'
+          - id: compaction
+            name: cordis:group
+            group: true
+            isolate:
+              compaction: true
+            config:
+              - id: compaction-basic
+                name: '@deepseek-ai/dsh-compaction-basic'
+              - id: command-compact
+                name: '@deepseek-ai/dsh-command-compact'

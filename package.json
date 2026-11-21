@@ -1,0 +1,67 @@
+{
+  "name": "dsh-aurabot-qq",
+  "version": "1.2.2-rc.1",
+  "description": "Aurabot：DeepSeek Harness QQ 伙伴插件（经 SnowLuma / OneBot v11 接 QQ）",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "main": "src/host.js",
+  "exports": {
+    ".": "./src/host.js",
+    "./client": "./client/client.js",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "test": "node --test \"test/**/*.test.js\""
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "slots"
+      ],
+      "external": [
+        "react"
+      ]
+    }
+  },
+  "keywords": [
+    "deepseek-harness",
+    "dsh-plugin",
+    "qq",
+    "onebot"
+  ],
+  "files": [
+    "src",
+    "client",
+    "personas",
+    "assets",
+    "cordis.patch.yml",
+    "README.md",
+    "docs/USER-MANUAL.md",
+    "docs/MODULE-TUTORIAL.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "README_EN.md",
+    "docs/DESIGN.md",
+    "vendor",
+    "THIRD-PARTY-NOTICES.md",
+    "docs/使用说明_思考插话与情绪系统.md",
+    "docs/RELEASE-CHECK.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/chen060627/Aurabot-Soul.git"
+  },
+  "homepage": "https://github.com/chen060627/Aurabot-Soul",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "dependencies": {
+    "dsh-bili-scroll": "file:vendor/dsh-bili-scroll"
+  }
+}
